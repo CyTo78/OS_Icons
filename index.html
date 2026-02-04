@@ -63,17 +63,21 @@
         
         /* Animation Logic */
         .card {
-            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-            opacity: 1;
-            transform: scale(1);
-            visibility: visible;
+        transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 1;
+        transform: scale(1);
+        }
+
+        .card.filtering-out {
+            opacity: 0;
+            transform: scale(0.7);
+            pointer-events: none; /* Prevent clicking while fading */
         }
 
         /* When hidden by search */
         .card.hidden { 
-            opacity: 0; 
-            transform: scale(0.8); 
-            display: none !important; /* Standard hidden */
+            display: none !important; 
         }
 
         /* GRID VIEW */
@@ -162,22 +166,34 @@
             }
 
             searchBar.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const cards = document.querySelectorAll('.card');
-                let count = 0;
+            const term = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            let count = 0;
 
-                cards.forEach(card => {
-                    const isMatch = card.getAttribute('data-name').includes(term);
-                    if (isMatch) {
-                        card.classList.remove('hidden');
-                        count++;
-                    } else {
+            cards.forEach(card => {
+                const isMatch = card.getAttribute('data-name').includes(term);
+
+                if (isMatch) {
+                    // 1. If it was hidden, bring it back to layout first
+                    card.classList.remove('hidden');
+                    // 2. Small timeout to allow the browser to register the layout change before animating
+                    setTimeout(() => {
+                        card.classList.remove('filtering-out');
+                    }, 10);
+                count++;
+                } else {
+                    // 1. Start the fade/scale animation
+                    card.classList.add('filtering-out');
+                    // 2. Wait for animation (400ms) then remove from layout
+                    setTimeout(() => {
+                    if (card.classList.contains('filtering-out')) {
                         card.classList.add('hidden');
                     }
-                });
-                stats.innerHTML = `Found ${count} <button class="sync-btn" onclick="location.reload()">(Sync)</button>`;
-            });
-
+                }, 400); 
+            }
+        });
+        stats.innerHTML = `Found ${count} <button class="sync-btn" onclick="location.reload()">(Sync)</button>`;
+        });
             loadIcons();
         });
 
