@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Icon Library</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 2rem; background: #f4f4f9; }
+        h1 { color: #333; }
+        #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }
+        img { max-width: 80px; height: auto; margin-bottom: 10px; }
+        p { font-size: 12px; word-break: break-all; color: #666; margin: 0; }
+    </style>
+</head>
+<body>
+
+    <h1>Icon Library</h1>
+    <div id="gallery">Loading icons...</div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const username = 'CyTo78';
+        const repo = 'OS_Icons';
+        const folderPath = 'main/docs'; // The path to your icons
+        // ---------------------
+
+        const apiUrl = `https://api.github.com/repos/${username}/${repo}/contents/${folderPath}`;
+
+        async function loadIcons() {
+            try {
+                const response = await fetch(apiUrl);
+                const files = await response.json();
+                const gallery = document.getElementById('gallery');
+                gallery.innerHTML = ''; // Clear loading text
+
+                files.forEach(file => {
+                    // Only show PNG files
+                    if (file.name.toLowerCase().endsWith('.png')) {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        
+                        // Use the download_url from the API for the image src
+                        card.innerHTML = `
+                            <img src="${file.download_url}" alt="${file.name}">
+                            <p>${file.name}</p>
+                        `;
+                        gallery.appendChild(card);
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching icons:', error);
+                document.getElementById('gallery').innerText = 'Failed to load icons.';
+            }
+        }
+
+        loadIcons();
+    </script>
+</body>
+</html>
