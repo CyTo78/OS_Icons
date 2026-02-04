@@ -1,80 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Icon Library Explorer</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
-        body { font-family: system-ui, -apple-system, sans-serif; padding: 2rem; background: var(--bg); color: var(--text); margin: 0; }
+        :root { 
+            --primary: #2563eb; 
+            --bg: #f8fafc; 
+            --text: #1e293b; 
+            --card-bg: transparent;
+            --card-border: transparent;
+        }
+
+        /* Dark Mode Variables */
+        body.dark {
+            --bg: #0f172a;
+            --text: #f1f5f9;
+            --primary: #3b82f6;
+        }
+
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            padding: 2rem; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            transition: background 0.3s, color 0.3s;
+        }
+
         .header { max-width: 1200px; margin: 0 auto 2rem; }
         
-        /* Controls Row */
-        .controls { display: flex; gap: 10px; margin-bottom: 2rem; position: sticky; top: 1rem; z-index: 10; }
+        .controls { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 2rem; 
+            position: sticky; 
+            top: 1rem; 
+            z-index: 10; 
+        }
+
         #search-bar { 
             flex-grow: 1; padding: 12px 20px; font-size: 1rem;
             border: 2px solid #e2e8f0; border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); outline: none;
         }
-        .view-toggle {
-            padding: 0 20px; background: white; border: 2px solid #e2e8f0;
-            border-radius: 12px; cursor: pointer; font-weight: 600; color: var(--text);
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        
+        /* Dark mode search bar tweak */
+        body.dark #search-bar { background: #1e293b; color: white; border-color: #334155; }
+
+        .btn {
+            padding: 0 15px; background: white; border: 2px solid #e2e8f0;
+            border-radius: 12px; cursor: pointer; font-weight: 600; color: #1e293b;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: 0.2s;
         }
-        .view-toggle:hover { background: #f1f5f9; }
+        body.dark .btn { background: #1e293b; color: white; border-color: #334155; }
+        .btn:hover { background: #f1f5f9; transform: translateY(-1px); }
+        body.dark .btn:hover { background: #334155; }
 
         /* Gallery Layouts */
         #gallery { display: grid; max-width: 1200px; margin: 0 auto; gap: 1.5rem; }
         
-        /* GRID VIEW (Default) */
+        /* GRID VIEW */
         #gallery.grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
         #gallery.grid .card { 
-            background: white; padding: 1.5rem; border-radius: 12px; 
-            text-align: center; border: 1px solid #e2e8f0;
+            background: var(--card-bg); padding: 1.5rem; border-radius: 12px; 
+            text-align: center; border: 1px solid var(--card-border);
             display: flex; flex-direction: column; align-items: center;
         }
-        #gallery.grid img { width: 64px; height: 64px; margin-bottom: 1rem; }
+        #gallery.grid img { width: 80px; height: 80px; margin-bottom: 1rem; }
 
         /* LIST VIEW */
         #gallery.list { grid-template-columns: 1fr; }
         #gallery.list .card { 
-            background: white; padding: 10px 20px; border-radius: 8px; 
+            background: var(--card-bg); padding: 10px 20px; border-radius: 8px; 
             display: flex; align-items: center; justify-content: space-between;
-            border: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f033;
         }
         #gallery.list img { width: 32px; height: 32px; margin-right: 15px; }
         #gallery.list .name { flex-grow: 1; text-align: left; margin: 0; }
 
         .card.hidden { display: none !important; }
-        img { object-fit: contain; background: #f1f5f9; border-radius: 6px; padding: 4px; }
-        .name { font-size: 0.85rem; font-weight: 600; word-break: break-all; }
+        img { object-fit: contain; background: transparent; padding: 4px; }
+        .name { font-size: 0.85rem; font-weight: 600; word-break: break-all; margin-bottom: 8px; }
         
         .copy-btn {
-            background: #f1f5f9; border: none; padding: 6px 12px; border-radius: 6px;
+            background: #f1f5f91a; border: 1px solid var(--primary); padding: 6px 12px; border-radius: 6px;
             font-size: 0.7rem; cursor: pointer; color: var(--primary); font-weight: bold;
         }
         .copy-btn:hover { background: var(--primary); color: white; }
+
+        #stats { font-size: 0.9rem; opacity: 0.8; }
+        .sync-btn { border: none; background: none; cursor: pointer; color: var(--primary); text-decoration: underline; padding: 0; margin-left: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-    <h1>Icon Library</h1>
-    <div class="controls">
-        <input type="text" id="search-bar" placeholder="Search icons...">
-        <button class="view-toggle" id="toggle-view">Toggle List/Grid</button>
+        <h1>Icon Library</h1>
+        <div class="controls">
+            <input type="text" id="search-bar" placeholder="Search icons...">
+            <button class="btn" id="toggle-view" title="Toggle Grid/List">Layout</button>
+            <button class="btn" id="toggle-dark" title="Toggle Dark Mode">🌓</button>
+        </div>
+        <p id="stats">
+            Loading icons... 
+            <button class="sync-btn" onclick="location.reload()">(Sync Now)</button>
+        </p>
     </div>
-    
-    <p id="stats">
-        Loading icons... 
-        <button onclick="location.reload()" style="border:none; background:none; cursor:pointer; font-size:12px; color:var(--primary); text-decoration:underline; padding:0; margin-left:10px;">
-            (Sync Now)
-        </button>
-    </p>
-</div>
 
     <div id="gallery" class="grid"></div>
 
@@ -89,24 +127,33 @@
             const gallery = document.getElementById('gallery');
             const searchBar = document.getElementById('search-bar');
             const toggleBtn = document.getElementById('toggle-view');
+            const darkBtn = document.getElementById('toggle-dark');
             const stats = document.getElementById('stats');
 
-            // Toggle View Logic
+            // View Toggle (Grid/List)
             toggleBtn.addEventListener('click', () => {
                 gallery.classList.toggle('grid');
                 gallery.classList.toggle('list');
             });
 
+            // Dark Mode Toggle
+            darkBtn.addEventListener('click', () => {
+                document.body.classList.toggle('dark');
+            });
+
             async function loadIcons() {
                 try {
-                    // The '?' + Date.now() makes every request unique so GitHub can't use a cached version
-                    const response = await fetch(`https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.folderPath}?t=${Date.now()}`);
-                    if (!response.ok) throw new Error('Folder not found');
+                    // Cache-busting API call
+                    const url = `https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.folderPath}?t=${Date.now()}`;
+                    const response = await fetch(url);
+                    
+                    if (!response.ok) throw new Error('Could not find folder');
+                    
                     const files = await response.json();
                     const pngFiles = files.filter(f => f.name.toLowerCase().endsWith('.png'));
                     
                     gallery.innerHTML = '';
-                    stats.innerText = `Showing ${pngFiles.length} icons`;
+                    stats.innerHTML = `Showing ${pngFiles.length} icons <button class="sync-btn" onclick="location.reload()">(Sync Now)</button>`;
 
                     pngFiles.forEach(file => {
                         const card = document.createElement('div');
@@ -120,10 +167,11 @@
                         gallery.appendChild(card);
                     });
                 } catch (e) {
-                    stats.innerText = 'Error loading icons. Check folder name.';
+                    stats.innerText = 'Error loading icons. Ensure folder name is "Icons".';
                 }
             }
 
+            // Real-time Search
             searchBar.addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase();
                 const cards = document.querySelectorAll('.card');
@@ -136,7 +184,7 @@
                         card.classList.add('hidden');
                     }
                 });
-                stats.innerText = `Found ${count} icons`;
+                stats.innerHTML = `Found ${count} icons <button class="sync-btn" onclick="location.reload()">(Sync Now)</button>`;
             });
 
             loadIcons();
@@ -144,7 +192,7 @@
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                alert('URL copied!');
+                alert('URL copied to clipboard!');
             });
         }
     </script>
