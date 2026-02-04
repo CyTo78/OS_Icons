@@ -15,10 +15,8 @@
             --bg: #f8fafc; 
             --text: #1e293b; 
             --card-bg: transparent;
-            --card-border: transparent;
         }
 
-        /* Dark Mode Variables */
         body.dark {
             --bg: #0f172a;
             --text: #f1f5f9;
@@ -51,7 +49,6 @@
             box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); outline: none;
         }
         
-        /* Dark mode search bar tweak */
         body.dark #search-bar { background: #1e293b; color: white; border-color: #334155; }
 
         .btn {
@@ -61,19 +58,32 @@
         }
         body.dark .btn { background: #1e293b; color: white; border-color: #334155; }
         .btn:hover { background: #f1f5f9; transform: translateY(-1px); }
-        body.dark .btn:hover { background: #334155; }
 
-        /* Gallery Layouts */
         #gallery { display: grid; max-width: 1200px; margin: 0 auto; gap: 1.5rem; }
         
+        /* Animation Logic */
+        .card {
+            transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+            opacity: 1;
+            transform: scale(1);
+            visibility: visible;
+        }
+
+        /* When hidden by search */
+        .card.hidden { 
+            opacity: 0; 
+            transform: scale(0.8); 
+            display: none !important; /* Standard hidden */
+        }
+
         /* GRID VIEW */
         #gallery.grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
         #gallery.grid .card { 
             background: var(--card-bg); padding: 1.5rem; border-radius: 12px; 
-            text-align: center; border: 1px solid var(--card-border);
-            display: flex; flex-direction: column; align-items: center;
+            text-align: center; display: flex; flex-direction: column; align-items: center;
         }
-        #gallery.grid img { width: 80px; height: 80px; margin-bottom: 1rem; }
+        #gallery.grid img { width: 80px; height: 80px; margin-bottom: 1rem; transition: 0.2s; }
+        #gallery.grid .card:hover img { transform: scale(1.1); }
 
         /* LIST VIEW */
         #gallery.list { grid-template-columns: 1fr; }
@@ -85,7 +95,6 @@
         #gallery.list img { width: 32px; height: 32px; margin-right: 15px; }
         #gallery.list .name { flex-grow: 1; text-align: left; margin: 0; }
 
-        .card.hidden { display: none !important; }
         img { object-fit: contain; background: transparent; padding: 4px; }
         .name { font-size: 0.85rem; font-weight: 600; word-break: break-all; margin-bottom: 8px; }
         
@@ -95,8 +104,7 @@
         }
         .copy-btn:hover { background: var(--primary); color: white; }
 
-        #stats { font-size: 0.9rem; opacity: 0.8; }
-        .sync-btn { border: none; background: none; cursor: pointer; color: var(--primary); text-decoration: underline; padding: 0; margin-left: 10px; }
+        .sync-btn { border: none; background: none; cursor: pointer; color: var(--primary); text-decoration: underline; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -104,56 +112,40 @@
     <div class="header">
         <h1>Icon Library</h1>
         <div class="controls">
-            <input type="text" id="search-bar" placeholder="Search icons...">
-            <button class="btn" id="toggle-view" title="Toggle Grid/List">Layout</button>
-            <button class="btn" id="toggle-dark" title="Toggle Dark Mode">🌓</button>
+            <input type="text" id="search-bar" placeholder="Filter icons...">
+            <button class="btn" id="toggle-view">Layout</button>
+            <button class="btn" id="toggle-dark">🌓</button>
         </div>
-        <p id="stats">
-            Loading icons... 
-            <button class="sync-btn" onclick="location.reload()">(Sync Now)</button>
-        </p>
+        <p id="stats">Loading... <button class="sync-btn" onclick="location.reload()">(Sync)</button></p>
     </div>
 
     <div id="gallery" class="grid"></div>
 
     <script>
-        const config = {
-            username: 'cyto78',
-            repo: 'OS_Icons',
-            folderPath: 'docs/icons' 
-        };
+        const config = { username: 'cyto78', repo: 'OS_Icons', folderPath: 'docs/icons' };
 
         document.addEventListener('DOMContentLoaded', () => {
             const gallery = document.getElementById('gallery');
             const searchBar = document.getElementById('search-bar');
-            const toggleBtn = document.getElementById('toggle-view');
-            const darkBtn = document.getElementById('toggle-dark');
             const stats = document.getElementById('stats');
 
-            // View Toggle (Grid/List)
-            toggleBtn.addEventListener('click', () => {
+            document.getElementById('toggle-view').addEventListener('click', () => {
                 gallery.classList.toggle('grid');
                 gallery.classList.toggle('list');
             });
 
-            // Dark Mode Toggle
-            darkBtn.addEventListener('click', () => {
+            document.getElementById('toggle-dark').addEventListener('click', () => {
                 document.body.classList.toggle('dark');
             });
 
             async function loadIcons() {
                 try {
-                    // Cache-busting API call
-                    const url = `https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.folderPath}?t=${Date.now()}`;
-                    const response = await fetch(url);
-                    
-                    if (!response.ok) throw new Error('Could not find folder');
-                    
+                    const response = await fetch(`https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.folderPath}?t=${Date.now()}`);
                     const files = await response.json();
                     const pngFiles = files.filter(f => f.name.toLowerCase().endsWith('.png'));
                     
                     gallery.innerHTML = '';
-                    stats.innerHTML = `Showing ${pngFiles.length} icons <button class="sync-btn" onclick="location.reload()">(Sync Now)</button>`;
+                    stats.innerHTML = `${pngFiles.length} icons <button class="sync-btn" onclick="location.reload()">(Sync)</button>`;
 
                     pngFiles.forEach(file => {
                         const card = document.createElement('div');
@@ -166,25 +158,24 @@
                         `;
                         gallery.appendChild(card);
                     });
-                } catch (e) {
-                    stats.innerText = 'Error loading icons. Ensure folder name is "Icons".';
-                }
+                } catch (e) { stats.innerText = 'Error loading folder.'; }
             }
 
-            // Real-time Search
             searchBar.addEventListener('input', (e) => {
                 const term = e.target.value.toLowerCase();
                 const cards = document.querySelectorAll('.card');
                 let count = 0;
+
                 cards.forEach(card => {
-                    if (card.getAttribute('data-name').includes(term)) {
+                    const isMatch = card.getAttribute('data-name').includes(term);
+                    if (isMatch) {
                         card.classList.remove('hidden');
                         count++;
                     } else {
                         card.classList.add('hidden');
                     }
                 });
-                stats.innerHTML = `Found ${count} icons <button class="sync-btn" onclick="location.reload()">(Sync Now)</button>`;
+                stats.innerHTML = `Found ${count} <button class="sync-btn" onclick="location.reload()">(Sync)</button>`;
             });
 
             loadIcons();
@@ -192,7 +183,11 @@
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
-                alert('URL copied to clipboard!');
+                const alertBox = document.createElement('div');
+                alertBox.innerText = "Copied!";
+                alertBox.style = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--primary); color:white; padding:10px 20px; border-radius:20px; z-index:100; font-weight:bold;";
+                document.body.appendChild(alertBox);
+                setTimeout(() => alertBox.remove(), 1500);
             });
         }
     </script>
