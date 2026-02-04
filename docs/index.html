@@ -59,45 +59,50 @@
 
     <script>
         // --- CONFIGURATION ---
-        const config = {
-            username: 'cyto78',
-            repo: 'OS_Icons',
-            folderPath: 'icons'
-        };
-        // ---------------------
+// --- CONFIGURATION ---
+const config = {
+    username: 'cyto78',
+    repo: 'OS_Icons',
+    folderPath: 'icons' // Change to 'Icons' if your folder starts with a capital I
+};
+// ---------------------
 
-        const gallery = document.getElementById('gallery');
-        const searchBar = document.getElementById('search-bar');
-        const stats = document.getElementById('stats');
+async function loadIcons() {
+    const gallery = document.getElementById('gallery');
+    const stats = document.getElementById('stats');
+    
+    // This is the specific URL that is currently 404ing for you
+    const url = `https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.folderPath}`;
 
-        async function loadIcons() {
-            try {
-                const response = await fetch(`https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.folderPath}`);
-                const files = await response.json();
-                
-                const pngFiles = files.filter(f => f.name.toLowerCase().endsWith('.png'));
-                gallery.innerHTML = '';
-                stats.innerText = `Showing ${pngFiles.length} icons`;
-
-                pngFiles.forEach(file => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.setAttribute('data-name', file.name.toLowerCase());
-                    
-                    // The direct URL for the image
-                    const directUrl = file.download_url;
-
-                    card.innerHTML = `
-                        <img src="${directUrl}" loading="lazy">
-                        <div class="name">${file.name}</div>
-                        <button class="copy-btn" onclick="copyToClipboard('${directUrl}')">Copy Link</button>
-                    `;
-                    gallery.appendChild(card);
-                });
-            } catch (e) {
-                stats.innerText = 'Error loading icons. Check your config or API limit.';
-            }
+    try {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`GitHub API returned ${response.status}. Check if the folder "${config.folderPath}" exists exactly as named.`);
         }
+
+        const files = await response.json();
+        const pngFiles = files.filter(f => f.name.toLowerCase().endsWith('.png'));
+        
+        gallery.innerHTML = '';
+        stats.innerText = `Showing ${pngFiles.length} icons`;
+
+        pngFiles.forEach(file => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.setAttribute('data-name', file.name.toLowerCase());
+            card.innerHTML = `
+                <img src="${file.download_url}" loading="lazy">
+                <div class="name">${file.name}</div>
+                <button class="copy-btn" onclick="copyToClipboard('${file.download_url}')">Copy Link</button>
+            `;
+            gallery.appendChild(card);
+        });
+    } catch (e) {
+        console.error(e);
+        stats.innerHTML = `<span style="color:red;">Error: ${e.message}</span>`;
+    }
+}
 
         // Search Filter Logic
         searchBar.addEventListener('input', (e) => {
