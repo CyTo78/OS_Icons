@@ -93,7 +93,8 @@
 
             async function loadIcons() {
                 try {
-                    const response = await fetch(`https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.folderPath}`);
+                    // The '?' + Date.now() makes every request unique so GitHub can't use a cached version
+                    const response = await fetch(`https://api.github.com/repos/${config.username}/${config.repo}/contents/${config.folderPath}?t=${Date.now()}`);
                     if (!response.ok) throw new Error('Folder not found');
                     const files = await response.json();
                     const pngFiles = files.filter(f => f.name.toLowerCase().endsWith('.png'));
